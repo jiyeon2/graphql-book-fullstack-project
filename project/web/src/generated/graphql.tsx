@@ -104,14 +104,26 @@ export type LoginResponse = {
 
 export type Mutation = {
   __typename?: 'Mutation';
+  createNotification: Notification;
+  vote: Scalars['Boolean'];
   createOrUpdateCutReview?: Maybe<CutReview>;
   deleteReview: Scalars['Boolean'];
-  vote: Scalars['Boolean'];
   uploadProfileImage: Scalars['Boolean'];
   signUp: User;
   login: LoginResponse;
   refreshAccessToken?: Maybe<RefreshAccessTokenResponse>;
   logout: Scalars['Boolean'];
+};
+
+
+export type MutationCreateNotificationArgs = {
+  text: Scalars['String'];
+  userId: Scalars['Int'];
+};
+
+
+export type MutationVoteArgs = {
+  cutId: Scalars['Int'];
 };
 
 
@@ -122,11 +134,6 @@ export type MutationCreateOrUpdateCutReviewArgs = {
 
 export type MutationDeleteReviewArgs = {
   id: Scalars['Int'];
-};
-
-
-export type MutationVoteArgs = {
-  cutId: Scalars['Int'];
 };
 
 
@@ -144,6 +151,15 @@ export type MutationLoginArgs = {
   loginInput: LoginInput;
 };
 
+export type Notification = {
+  __typename?: 'Notification';
+  id: Scalars['Int'];
+  text: Scalars['String'];
+  createdAt: Scalars['String'];
+  updatedAt: Scalars['String'];
+  userId: Scalars['Float'];
+};
+
 export type PaginatedFilms = {
   __typename?: 'PaginatedFilms';
   films: Array<Film>;
@@ -152,19 +168,14 @@ export type PaginatedFilms = {
 
 export type Query = {
   __typename?: 'Query';
-  cutReviews: Array<CutReview>;
+  /** 세션에 해당되는 유저의 모든 알림을 가져옴 */
+  notifications: Array<Notification>;
   cuts: Array<Cut>;
   cut?: Maybe<Cut>;
+  cutReviews: Array<CutReview>;
   films: PaginatedFilms;
   film?: Maybe<Film>;
   me?: Maybe<User>;
-};
-
-
-export type QueryCutReviewsArgs = {
-  take?: Maybe<Scalars['Int']>;
-  skip?: Maybe<Scalars['Int']>;
-  cutId: Scalars['Int'];
 };
 
 
@@ -174,6 +185,13 @@ export type QueryCutsArgs = {
 
 
 export type QueryCutArgs = {
+  cutId: Scalars['Int'];
+};
+
+
+export type QueryCutReviewsArgs = {
+  take?: Maybe<Scalars['Int']>;
+  skip?: Maybe<Scalars['Int']>;
   cutId: Scalars['Int'];
 };
 
@@ -198,6 +216,11 @@ export type SignUpInput = {
   email: Scalars['String'];
   username: Scalars['String'];
   password: Scalars['String'];
+};
+
+export type Subscription = {
+  __typename?: 'Subscription';
+  newNotification: Notification;
 };
 
 
@@ -400,6 +423,28 @@ export type MeQuery = (
     { __typename?: 'User' }
     & Pick<User, 'id' | 'username' | 'email' | 'updatedAt' | 'createdAt' | 'profileImage'>
   )> }
+);
+
+export type NotificationsQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type NotificationsQuery = (
+  { __typename?: 'Query' }
+  & { notifications: Array<(
+    { __typename?: 'Notification' }
+    & Pick<Notification, 'id' | 'userId' | 'text' | 'createdAt' | 'updatedAt'>
+  )> }
+);
+
+export type NewNotificationSubscriptionVariables = Exact<{ [key: string]: never; }>;
+
+
+export type NewNotificationSubscription = (
+  { __typename?: 'Subscription' }
+  & { newNotification: (
+    { __typename?: 'Notification' }
+    & Pick<Notification, 'id' | 'userId' | 'text' | 'createdAt' | 'updatedAt'>
+  ) }
 );
 
 
@@ -897,3 +942,74 @@ export function useMeLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<MeQuery
 export type MeQueryHookResult = ReturnType<typeof useMeQuery>;
 export type MeLazyQueryHookResult = ReturnType<typeof useMeLazyQuery>;
 export type MeQueryResult = Apollo.QueryResult<MeQuery, MeQueryVariables>;
+export const NotificationsDocument = gql`
+    query notifications {
+  notifications {
+    id
+    userId
+    text
+    createdAt
+    updatedAt
+  }
+}
+    `;
+
+/**
+ * __useNotificationsQuery__
+ *
+ * To run a query within a React component, call `useNotificationsQuery` and pass it any options that fit your needs.
+ * When your component renders, `useNotificationsQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useNotificationsQuery({
+ *   variables: {
+ *   },
+ * });
+ */
+export function useNotificationsQuery(baseOptions?: Apollo.QueryHookOptions<NotificationsQuery, NotificationsQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<NotificationsQuery, NotificationsQueryVariables>(NotificationsDocument, options);
+      }
+export function useNotificationsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<NotificationsQuery, NotificationsQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<NotificationsQuery, NotificationsQueryVariables>(NotificationsDocument, options);
+        }
+export type NotificationsQueryHookResult = ReturnType<typeof useNotificationsQuery>;
+export type NotificationsLazyQueryHookResult = ReturnType<typeof useNotificationsLazyQuery>;
+export type NotificationsQueryResult = Apollo.QueryResult<NotificationsQuery, NotificationsQueryVariables>;
+export const NewNotificationDocument = gql`
+    subscription newNotification {
+  newNotification {
+    id
+    userId
+    text
+    createdAt
+    updatedAt
+  }
+}
+    `;
+
+/**
+ * __useNewNotificationSubscription__
+ *
+ * To run a query within a React component, call `useNewNotificationSubscription` and pass it any options that fit your needs.
+ * When your component renders, `useNewNotificationSubscription` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the subscription, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useNewNotificationSubscription({
+ *   variables: {
+ *   },
+ * });
+ */
+export function useNewNotificationSubscription(baseOptions?: Apollo.SubscriptionHookOptions<NewNotificationSubscription, NewNotificationSubscriptionVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useSubscription<NewNotificationSubscription, NewNotificationSubscriptionVariables>(NewNotificationDocument, options);
+      }
+export type NewNotificationSubscriptionHookResult = ReturnType<typeof useNewNotificationSubscription>;
+export type NewNotificationSubscriptionResult = Apollo.SubscriptionResult<NewNotificationSubscription>;

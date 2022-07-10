@@ -9,6 +9,7 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import Notification from './Notification';
 import { CutReview } from './CutReview';
 import { CutVote } from './CutVote';
 
@@ -47,4 +48,7 @@ export default class User extends BaseEntity {
   @Column({ comment: '프로필 사진 경로', nullable: true })
   @Field({ description: '프로필 사진 경로', nullable: true })
   profileImage: string;
+
+  @OneToMany(() => Notification, (noti) => noti.user)
+  notifications: Notification[];
 }

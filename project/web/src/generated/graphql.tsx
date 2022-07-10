@@ -24,6 +24,8 @@ export type Cut = {
   /** 영화 아이디 */
   filmId: Scalars['Int'];
   film?: Maybe<Film>;
+  votesCount: Scalars['Int'];
+  isVoted: Scalars['Boolean'];
 };
 
 export type Director = {
@@ -78,10 +80,16 @@ export type LoginResponse = {
 
 export type Mutation = {
   __typename?: 'Mutation';
+  vote: Scalars['Boolean'];
   signUp: User;
   login: LoginResponse;
   refreshAccessToken?: Maybe<RefreshAccessTokenResponse>;
   logout: Scalars['Boolean'];
+};
+
+
+export type MutationVoteArgs = {
+  cutId: Scalars['Int'];
 };
 
 
@@ -207,6 +215,16 @@ export type SignUpMutation = (
   ) }
 );
 
+export type VoteMutationVariables = Exact<{
+  cutId: Scalars['Int'];
+}>;
+
+
+export type VoteMutation = (
+  { __typename?: 'Mutation' }
+  & Pick<Mutation, 'vote'>
+);
+
 export type CutQueryVariables = Exact<{
   cutId: Scalars['Int'];
 }>;
@@ -216,7 +234,7 @@ export type CutQuery = (
   { __typename?: 'Query' }
   & { cut?: Maybe<(
     { __typename?: 'Cut' }
-    & Pick<Cut, 'id' | 'src'>
+    & Pick<Cut, 'id' | 'src' | 'votesCount' | 'isVoted'>
     & { film?: Maybe<(
       { __typename?: 'Film' }
       & Pick<Film, 'id' | 'title'>
@@ -429,6 +447,37 @@ export function useSignUpMutation(baseOptions?: Apollo.MutationHookOptions<SignU
 export type SignUpMutationHookResult = ReturnType<typeof useSignUpMutation>;
 export type SignUpMutationResult = Apollo.MutationResult<SignUpMutation>;
 export type SignUpMutationOptions = Apollo.BaseMutationOptions<SignUpMutation, SignUpMutationVariables>;
+export const VoteDocument = gql`
+    mutation vote($cutId: Int!) {
+  vote(cutId: $cutId)
+}
+    `;
+export type VoteMutationFn = Apollo.MutationFunction<VoteMutation, VoteMutationVariables>;
+
+/**
+ * __useVoteMutation__
+ *
+ * To run a mutation, you first call `useVoteMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useVoteMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [voteMutation, { data, loading, error }] = useVoteMutation({
+ *   variables: {
+ *      cutId: // value for 'cutId'
+ *   },
+ * });
+ */
+export function useVoteMutation(baseOptions?: Apollo.MutationHookOptions<VoteMutation, VoteMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<VoteMutation, VoteMutationVariables>(VoteDocument, options);
+      }
+export type VoteMutationHookResult = ReturnType<typeof useVoteMutation>;
+export type VoteMutationResult = Apollo.MutationResult<VoteMutation>;
+export type VoteMutationOptions = Apollo.BaseMutationOptions<VoteMutation, VoteMutationVariables>;
 export const CutDocument = gql`
     query cut($cutId: Int!) {
   cut(cutId: $cutId) {
@@ -438,6 +487,8 @@ export const CutDocument = gql`
       id
       title
     }
+    votesCount
+    isVoted
   }
 }
     `;

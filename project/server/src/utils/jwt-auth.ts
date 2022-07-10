@@ -31,7 +31,7 @@ export const verifyAccessToken = (
     ) as JwtVerifiedUser;
     return verified;
   } catch (err) {
-    console.error('access_token expired: ', err.expiredAt);
+    console.error('access token expired: ', err.expiredAt);
     throw new AuthenticationError('access token expired');
   }
 };

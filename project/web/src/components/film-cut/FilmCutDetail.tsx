@@ -6,17 +6,61 @@ import {
   Heading,
   HStack,
   Image,
+  Text,
+  useColorModeValue,
 } from '@chakra-ui/react';
 import { FaHeart } from 'react-icons/fa';
+import {
+  CutDocument,
+  CutQuery,
+  CutQueryVariables,
+  useVoteMutation,
+} from '../../generated/graphql';
 
 interface MovieCutDetailProps {
   cutImg: string;
   cutId: number;
+  isVoted?: boolean;
+  votesCount?: number;
 }
 export function FilmCutDetail({
   cutImg,
   cutId,
+  isVoted = false,
+  votesCount = 0,
 }: MovieCutDetailProps): JSX.Element {
+  const voteButtonColor = useColorModeValue('gray.500', 'gray.400');
+  const [vote, { loading: voteLoading }] = useVoteMutation({
+    variables: { cutId },
+    // 뮤테이션 요청 이후 캐시 지우거나 덮어씌우는 등 캐시 조절 가능
+    update: (cache, fetchResult) => {
+      // 캐시에서 cut 쿼리 데이터 조회
+      const currentCut = cache.readQuery<CutQuery, CutQueryVariables>({
+        query: CutDocument,
+        variables: { cutId },
+      });
+      if (currentCut && currentCut.cut) {
+        if (fetchResult.data?.vote) {
+          // cut 쿼리 데이터 설정
+          cache.writeQuery<CutQuery, CutQueryVariables>({
+            query: CutDocument,
+            variables: { cutId: currentCut.cut.id },
+            data: {
+              __typename: 'Query',
+              ...currentCut,
+              cut: {
+                ...currentCut.cut,
+                votesCount: isVoted
+                  ? currentCut.cut.votesCount - 1
+                  : currentCut.cut.votesCount + 1,
+                isVoted: !isVoted,
+              },
+            },
+          });
+        }
+      }
+    },
+  });
   return (
     <Box>
       <AspectRatio ratio={16 / 9}>
@@ -27,7 +71,15 @@ export function FilmCutDetail({
         <Flex justify="space-between" alignItems="center">
           <Heading size="sm">{cutId} 번째 사진</Heading>
           <HStack spacing={1} alignItems="center">
-            <Button aria-label="like-this-cut-button" leftIcon={<FaHeart />} />
+            <Button
+              color={isVoted ? 'pink.400' : voteButtonColor}
+              aria-label="like-this-cut-button"
+              leftIcon={<FaHeart />}
+              isLoading={voteLoading}
+              onClick={() => vote()}
+            >
+              <Text>{votesCount}</Text>
+            </Button>
             <Button colorScheme="teal">감상남기기</Button>
           </HStack>
         </Flex>

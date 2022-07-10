@@ -12,13 +12,27 @@ import {
   Publisher,
   PubSub,
 } from 'type-graphql';
+import { MySubscriptionContext } from '../apollo/createSubscriptionServer';
 import { MyContext } from '../apollo/createApolloServer';
 import Notification from '../entities/Notification';
 import { isAuthenticated } from '../middlewares/isAuthenticated';
 
 @Resolver(Notification)
 export class NotificationResolver {
-  @Subscription({ topics: 'NOTIFICATION_CREATED' }) // 요청에서 구독할 이벤트 이름
+  @Subscription({
+    topics: 'NOTIFICATION_CREATED', // 요청에서 구독할 이벤트 이름
+    // filter 리턴값이 참인 경우만 메서드 실행
+    filter: ({
+      payload,
+      context,
+    }: ResolverFilterData<Notification, null, MySubscriptionContext>) => {
+      const { verifiedUser } = context;
+      if (verifiedUser && payload && payload.userId === verifiedUser.userId) {
+        return true;
+      }
+      return false;
+    },
+  })
   newNotification(@Root() notificationPayload: Notification): Notification {
     return notificationPayload;
   }

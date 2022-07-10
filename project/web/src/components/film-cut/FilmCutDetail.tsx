@@ -8,13 +8,16 @@ import {
   Image,
   Text,
   useColorModeValue,
+  useToast,
 } from '@chakra-ui/react';
+import { useMemo } from 'react';
 import { FaHeart } from 'react-icons/fa';
 import {
   CutDocument,
   CutQuery,
   CutQueryVariables,
   useVoteMutation,
+  useMeQuery,
 } from '../../generated/graphql';
 
 interface MovieCutDetailProps {
@@ -29,6 +32,7 @@ export function FilmCutDetail({
   isVoted = false,
   votesCount = 0,
 }: MovieCutDetailProps): JSX.Element {
+  const toast = useToast();
   const voteButtonColor = useColorModeValue('gray.500', 'gray.400');
   const [vote, { loading: voteLoading }] = useVoteMutation({
     variables: { cutId },
@@ -61,6 +65,13 @@ export function FilmCutDetail({
       }
     },
   });
+
+  const accessToken = localStorage.getItem('access_token');
+  const { data: userData } = useMeQuery({ skip: !accessToken });
+  const isLoggedIn = useMemo(() => {
+    if (accessToken) return userData?.me?.id;
+    return false;
+  }, [accessToken, userData?.me?.id]);
   return (
     <Box>
       <AspectRatio ratio={16 / 9}>
@@ -76,7 +87,15 @@ export function FilmCutDetail({
               aria-label="like-this-cut-button"
               leftIcon={<FaHeart />}
               isLoading={voteLoading}
-              onClick={() => vote()}
+              onClick={() => {
+                if (isLoggedIn) vote();
+                else {
+                  toast({
+                    status: 'warning',
+                    description: '좋아요는 로그인 후 가능합니다',
+                  });
+                }
+              }}
             >
               <Text>{votesCount}</Text>
             </Button>

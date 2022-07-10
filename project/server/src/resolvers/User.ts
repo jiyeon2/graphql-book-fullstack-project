@@ -12,6 +12,8 @@ import {
   UseMiddleware,
 } from 'type-graphql';
 import jwt from 'jsonwebtoken';
+import { createWriteStream } from 'fs';
+import { FileUpload, GraphQLUpload } from 'graphql-upload';
 import { MyContext } from '../apollo/createApolloServer';
 import { isAuthenticated } from '../middlewares/isAuthenticated';
 import User from '../entities/User';
@@ -64,6 +66,31 @@ class RefreshAccessTokenResponse {
 
 @Resolver(User)
 export class UserResolver {
+  @UseMiddleware(isAuthenticated)
+  @Mutation(() => Boolean)
+  async uploadProfileImage(
+    @Ctx() { verifiedUser }: MyContext,
+    @Arg('file', () => GraphQLUpload)
+    { createReadStream, filename }: FileUpload,
+  ): Promise<boolean> {
+    const realFileName = verifiedUser.userId + filename;
+    const filePath = `public/${realFileName}`;
+
+    return new Promise((resolve, reject) =>
+      createReadStream().pipe(
+        createWriteStream(filePath)
+          .on('finish', async () => {
+            await User.update(
+              { id: verifiedUser.userId },
+              { profileImage: realFileName },
+            );
+            return resolve(true);
+          })
+          .on('error', () => reject(Error('file upload failed'))),
+      ),
+    );
+  }
+
   @Mutation(() => User)
   async signUp(@Arg('signUpInput') signUpInput: SignUpInput): Promise<User> {
     const { email, username, password } = signUpInput;

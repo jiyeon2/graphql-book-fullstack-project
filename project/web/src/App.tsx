@@ -3,9 +3,9 @@ import { ChakraProvider, theme } from '@chakra-ui/react';
 import { BrowserRouter, Route } from 'react-router-dom';
 import { createApolloClient } from './apollo/createApolloClient';
 import Film from './pages/Film';
+import Login from './pages/Login';
 import Main from './pages/Main';
 import SignUp from './pages/SignUp';
-import Login from './pages/Login';
 
 const apolloClient = createApolloClient();
 

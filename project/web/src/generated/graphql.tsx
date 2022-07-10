@@ -80,8 +80,8 @@ export type Mutation = {
   __typename?: 'Mutation';
   signUp: User;
   login: LoginResponse;
-  logout: Scalars['Boolean'];
   refreshAccessToken?: Maybe<RefreshAccessTokenResponse>;
+  logout: Scalars['Boolean'];
 };
 
 

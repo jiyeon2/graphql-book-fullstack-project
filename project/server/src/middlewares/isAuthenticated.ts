@@ -9,9 +9,10 @@ export const isAuthenticated: MiddlewareFn<MyContext> = async (
 ) => {
   const { authorization } = context.req.headers;
   if (!authorization) throw new AuthenticationError('unauthenticated');
+
   const accessToken = authorization.split(' ')[1];
   verifyAccessToken(accessToken);
-  if (!context.verifiedUser) throw new AuthenticationError('unauthenticated');
 
+  if (!context.verifiedUser) throw new AuthenticationError('unauthenticated');
   return next();
 };

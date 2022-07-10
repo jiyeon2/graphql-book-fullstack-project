@@ -1,3 +1,4 @@
+/* eslint-disable react/jsx-no-bind */
 import { useApolloClient } from '@apollo/client';
 import {
   Avatar,
@@ -47,7 +48,6 @@ const LoggedInNavbarItem = (): JSX.Element => {
     </Stack>
   );
 };
-
 export default function Navbar(): JSX.Element {
   const accessToken = localStorage.getItem('access_token');
   const { data } = useMeQuery({ skip: !accessToken });
@@ -55,7 +55,6 @@ export default function Navbar(): JSX.Element {
     if (accessToken) return data?.me?.id;
     return false;
   }, [accessToken, data?.me?.id]);
-
   return (
     <Box
       zIndex={10}

@@ -1,18 +1,17 @@
 /* eslint-disable react/jsx-props-no-spreading */
 import {
   Box,
-  Button,
-  Divider,
-  FormControl,
-  FormErrorMessage,
-  FormLabel,
   Heading,
-  Input,
   Stack,
-  Text,
   useColorModeValue,
+  Text,
+  FormErrorMessage,
+  FormControl,
+  FormLabel,
+  Input,
+  Divider,
+  Button,
 } from '@chakra-ui/react';
-import React from 'react';
 import { useForm } from 'react-hook-form';
 import { useHistory } from 'react-router-dom';
 import {
@@ -48,7 +47,7 @@ export function RealLoginForm(): React.ReactElement {
 
   return (
     <Box
-      rounded="lg"
+      rouded="lg"
       bg={useColorModeValue('white', 'gray.700')}
       boxShadow="lg"
       p={8}
@@ -58,14 +57,14 @@ export function RealLoginForm(): React.ReactElement {
           <FormLabel>이메일 또는 아이디</FormLabel>
           <Input
             type="emailOrUsername"
-            placeholder="이메일 또는 아이디를 입력하세요."
+            placeholder="이메일 또는 아이디를 입력하세요"
             {...register('loginInput.emailOrUsername', {
-              required: '이메일 또는 아이디를 입력해주세요.',
+              required: '이메일 또는 아이디를 입력해주세요',
             })}
           />
           <FormErrorMessage>
             {errors.loginInput?.emailOrUsername &&
-              errors.loginInput.emailOrUsername.message}
+              errors.loginInput?.emailOrUsername.message}
           </FormErrorMessage>
         </FormControl>
 
@@ -73,13 +72,13 @@ export function RealLoginForm(): React.ReactElement {
           <FormLabel>암호</FormLabel>
           <Input
             type="password"
-            placeholder="***********"
+            placeholder="********"
             {...register('loginInput.password', {
-              required: '암호를 입력해주세요.',
+              required: '암호를 입력해주세요',
             })}
           />
           <FormErrorMessage>
-            {errors.loginInput?.password && errors.loginInput.password.message}
+            {errors.loginInput?.password && errors.loginInput?.password.message}
           </FormErrorMessage>
         </FormControl>
 
@@ -99,10 +98,9 @@ function LoginForm(): React.ReactElement {
       <Stack align="center">
         <Heading fontSize="4xl">지브리 명장면 프로젝트</Heading>
         <Text fontSize="lg" color="gray.600">
-          감상평과 좋아요를 눌러보세요!
+          감상평과 좋아요를 눌러보세요
         </Text>
       </Stack>
-
       <RealLoginForm />
     </Stack>
   );

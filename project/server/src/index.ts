@@ -1,7 +1,7 @@
-import cookieParser from 'cookie-parser';
 import express from 'express';
 import http from 'http';
 import 'reflect-metadata';
+import cookieParser from 'cookie-parser';
 import createApolloServer from './apollo/createApolloServer';
 import { createDB } from './db/db-client';
 

@@ -1,5 +1,4 @@
 import argon2 from 'argon2';
-import jwt from 'jsonwebtoken';
 import { IsEmail, IsString } from 'class-validator';
 import {
   Arg,
@@ -12,9 +11,10 @@ import {
   Resolver,
   UseMiddleware,
 } from 'type-graphql';
+import jwt from 'jsonwebtoken';
 import { MyContext } from '../apollo/createApolloServer';
-import User from '../entities/User';
 import { isAuthenticated } from '../middlewares/isAuthenticated';
+import User from '../entities/User';
 import {
   createAccessToken,
   createRefreshToken,
@@ -64,13 +64,6 @@ class RefreshAccessTokenResponse {
 
 @Resolver(User)
 export class UserResolver {
-  @UseMiddleware(isAuthenticated)
-  @Query(() => User, { nullable: true })
-  async me(@Ctx() ctx: MyContext): Promise<User | undefined> {
-    if (!ctx.verifiedUser) return undefined;
-    return User.findOne({ where: { id: ctx.verifiedUser.userId } });
-  }
-
   @Mutation(() => User)
   async signUp(@Arg('signUpInput') signUpInput: SignUpInput): Promise<User> {
     const { email, username, password } = signUpInput;
@@ -97,42 +90,39 @@ export class UserResolver {
     const user = await User.findOne({
       where: [{ email: emailOrUsername }, { username: emailOrUsername }],
     });
-    if (!user)
+
+    if (!user) {
       return {
         errors: [
-          { field: 'emailOrUsername', message: '해당하는 유저가 없습니다.' },
+          { field: 'emailOrUsername', message: '해당하는 유저가 없습니다' },
         ],
       };
+    }
 
     const isValid = await argon2.verify(user.password, password);
-    if (!isValid)
+    if (!isValid) {
       return {
         errors: [
-          { field: 'password', message: '비밀번호를 올바르게 입력해주세요.' },
+          { field: 'password', message: '비밀번호를 올바르게 입력해주세요' },
         ],
       };
+    }
 
     // 액세스 토큰 발급
     const accessToken = createAccessToken(user);
     const refreshToken = createRefreshToken(user);
-    // 리프레시 토큰 레디스 적재
-    await redis.set(String(user.id), refreshToken);
 
+    await redis.set(String(user.id), refreshToken);
     setRefreshTokenHeader(res, refreshToken);
 
     return { user, accessToken };
   }
 
-  @Mutation(() => Boolean)
   @UseMiddleware(isAuthenticated)
-  async logout(
-    @Ctx() { verifiedUser, res, redis }: MyContext,
-  ): Promise<boolean> {
-    if (verifiedUser) {
-      setRefreshTokenHeader(res, ''); // 리프레시 토큰 쿠키 제거
-      await redis.del(String(verifiedUser.userId)); // 레디스 리프레시 토큰 제거
-    }
-    return true;
+  @Query(() => User, { nullable: true })
+  async me(@Ctx() ctx: MyContext): Promise<User | undefined> {
+    if (!ctx.verifiedUser) return undefined;
+    return User.findOne({ where: { id: ctx.verifiedUser.userId } });
   }
 
   @Mutation(() => RefreshAccessTokenResponse, { nullable: true })
@@ -149,24 +139,38 @@ export class UserResolver {
       console.error(e);
       return null;
     }
+
     if (!tokenData) return null;
 
-    // 레디스 상에 user.id 로 저장된 토큰 조회
     const storedRefreshToken = await redis.get(String(tokenData.userId));
     if (!storedRefreshToken) return null;
     if (!(storedRefreshToken === refreshToken)) return null;
-
     const user = await User.findOne({ id: tokenData.userId });
     if (!user) return null;
 
-    const newAccessToken = createAccessToken(user); // 액세스토큰생성
-    const newRefreshToken = createRefreshToken(user); // 리프레시토큰생성
-    // 리프레시토큰 redis저장
+    const newAccessToken = createAccessToken(user);
+    const newRefreshToken = createRefreshToken(user);
+
     await redis.set(String(user.id), newRefreshToken);
 
-    // 쿠키로 리프레시 토큰 전송
-    setRefreshTokenHeader(res, newRefreshToken);
+    res.cookie('refreshtoken', newRefreshToken, {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'lax',
+    });
 
     return { accessToken: newAccessToken };
+  }
+
+  @Mutation(() => Boolean)
+  @UseMiddleware(isAuthenticated)
+  async logout(
+    @Ctx() { verifiedUser, res, redis }: MyContext,
+  ): Promise<boolean> {
+    if (verifiedUser) {
+      setRefreshTokenHeader(res, ''); // 리프레시 토큰 쿠키 제거
+      await redis.del(String(verifiedUser.userId)); // 레디스에서 리프레시 토큰 삭제
+    }
+    return true;
   }
 }

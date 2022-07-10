@@ -1,5 +1,4 @@
 import { Box, Flex, useColorModeValue } from '@chakra-ui/react';
-import React from 'react';
 import LoginForm from '../components/auth/LoginForm';
 import CommonLayout from '../components/CommonLayout';
 

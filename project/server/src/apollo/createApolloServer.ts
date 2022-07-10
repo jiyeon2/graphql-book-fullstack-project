@@ -2,6 +2,7 @@ import { ApolloServerPluginLandingPageLocalDefault } from 'apollo-server-core';
 import { ApolloServer } from 'apollo-server-express';
 import { buildSchema } from 'type-graphql';
 import { Request, Response } from 'express';
+import { CutReviewResolver } from '../resolvers/CutReview';
 import { createCutVoteLoader } from '../dataloaders/cutVoteLoader';
 import { CutResolver } from '../resolvers/Cut';
 import { FilmResolver } from '../resolvers/Film';
@@ -23,7 +24,7 @@ export interface MyContext {
 const createApolloServer = async (): Promise<ApolloServer> => {
   return new ApolloServer<MyContext>({
     schema: await buildSchema({
-      resolvers: [FilmResolver, CutResolver, UserResolver],
+      resolvers: [FilmResolver, CutResolver, UserResolver, CutReviewResolver],
     }),
     plugins: [ApolloServerPluginLandingPageLocalDefault()],
     context: ({ req, res }) => {

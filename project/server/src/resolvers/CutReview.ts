@@ -2,20 +2,35 @@
 import { IsInt, IsString } from 'class-validator';
 import {
   Arg,
+  Args,
+  ArgsType,
   Ctx,
   Field,
   FieldResolver,
   InputType,
   Int,
   Mutation,
+  Query,
   Resolver,
   Root,
   UseMiddleware,
 } from 'type-graphql';
+import { Not } from 'typeorm';
 import { MyContext } from '../apollo/createApolloServer';
 import { isAuthenticated } from '../middlewares/isAuthenticated';
 import { CutReview } from '../entities/CutReview';
 import User from '../entities/User';
+
+@ArgsType()
+class PaginationArgs {
+  @Field(() => Int, { defaultValue: 2 })
+  take: number;
+
+  @Field(() => Int, { nullable: true })
+  skip?: number;
+
+  @Field(() => Int) cutId: number;
+}
 
 @InputType()
 class CreateOrUpdateCutReviewInput {
@@ -30,6 +45,32 @@ class CreateOrUpdateCutReviewInput {
 
 @Resolver(CutReview)
 export class CutReviewResolver {
+  @Query(() => [CutReview])
+  async cutReviews(
+    @Args() { take, skip, cutId }: PaginationArgs,
+    @Ctx() { verifiedUser }: MyContext,
+  ): Promise<CutReview[]> {
+    let realTake = 2;
+    let reviewHistory: CutReview | undefined;
+    if (verifiedUser && verifiedUser.userId) {
+      reviewHistory = await CutReview.findOne({
+        where: { user: { id: verifiedUser.userId }, cutId },
+      });
+    }
+    if (reviewHistory) {
+      realTake = Math.min(take, 1);
+    }
+    const reviews = await CutReview.find({
+      where: reviewHistory ? { cutId, id: Not(reviewHistory.id) } : { cutId },
+      skip,
+      take: realTake,
+      order: { createdAt: 'DESC' },
+    });
+
+    if (reviewHistory) return [reviewHistory, ...reviews];
+    return reviews;
+  }
+
   @Mutation(() => CutReview, { nullable: true })
   @UseMiddleware(isAuthenticated)
   async createOrUpdateCutReview(
@@ -75,5 +116,14 @@ export class CutReviewResolver {
       return true;
     }
     return false;
+  }
+
+  @FieldResolver(() => Boolean)
+  isMine(
+    @Root() cutReview: CutReview,
+    @Ctx() { verifiedUser }: MyContext,
+  ): boolean {
+    if (!verifiedUser) return false;
+    return cutReview.userId === verifiedUser.userId;
   }
 }

@@ -9,12 +9,12 @@ import {
   Root,
   UseMiddleware,
 } from 'type-graphql';
-import { CutVote } from '../entities/CutVote';
-import { Cut } from '../entities/Cut';
-import { Film } from '../entities/Film';
-import ghibliData from '../data/ghibli';
-import { isAuthenticated } from '../middlewares/isAuthenticated';
 import { MyContext } from '../apollo/createApolloServer';
+import ghibliData from '../data/ghibli';
+import { Cut } from '../entities/Cut';
+import { CutVote } from '../entities/CutVote';
+import { Film } from '../entities/Film';
+import { isAuthenticated } from '../middlewares/isAuthenticated';
 
 @Resolver(Cut)
 export class CutResolver {

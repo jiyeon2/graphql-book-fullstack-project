@@ -45,8 +45,11 @@ const errorLink = onError(
 );
 
 const httpUploadLink = createUploadLink({
-  uri: 'http://localhost:4000/graphql',
-  fetchOptions: 'include',
+  // uri: 'http://localhost:4000/graphql',
+  uri: `${process.env.REACT_APP_API_HOST}/graphql`,
+  fetchOptions: {
+    credentials: 'include',
+  },
 });
 
 const authLink = setContext((request, prevContext) => {
@@ -60,7 +63,8 @@ const authLink = setContext((request, prevContext) => {
 });
 
 const wsLink = new WebSocketLink({
-  uri: 'ws://localhost:4000/graphql',
+  // uri: 'ws://localhost:4000/graphql',
+  uri: `${process.env.REACT_APP_API_SUBSCRIPTION_HOST}/graphql`,
   options: {
     reconnect: true,
     connectionParams: () => {
@@ -90,7 +94,8 @@ const splitLink = split(
 export const createApolloClient = (): ApolloClient<NormalizedCacheObject> => {
   apolloClient = new ApolloClient({
     cache: createApolloCache(),
-    uri: 'http://localhost:4000/graphql',
+    // uri: 'http://localhost:4000/graphql',
+    uri: `${process.env.REACT_APP_API_HOST}/graphql`,
     link: splitLink,
   });
   return apolloClient;

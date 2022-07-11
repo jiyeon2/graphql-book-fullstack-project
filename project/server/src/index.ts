@@ -3,10 +3,13 @@ import http from 'http';
 import 'reflect-metadata';
 import cookieParser from 'cookie-parser';
 import { graphqlUploadExpress } from 'graphql-upload';
+import dotenv from 'dotenv';
 import createApolloServer from './apollo/createApolloServer';
 import { createDB } from './db/db-client';
 import { createSchema } from './apollo/createSchema';
 import { createSubscriptionServer } from './apollo/createSubscriptionServer';
+
+dotenv.config(); // env 파일에서 작성한 환경변수가 process.env에 주입됨
 
 async function main() {
   await createDB();
@@ -14,6 +17,10 @@ async function main() {
   app.use(express.static('public'));
   app.use(cookieParser());
   app.use(graphqlUploadExpress({ maxFileSize: 1024 * 1000 * 5, maxFiles: 1 }));
+
+  app.get('/', (req, res) => {
+    res.status(200).send(); // for healthcheck
+  });
   const httpServer = http.createServer(app);
 
   const schema = await createSchema();
